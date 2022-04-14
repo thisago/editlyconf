@@ -1,208 +1,318 @@
-from std/json import JsonNode
-from std/tables import Table
+{.experimental: "dotOperators".}
 
-# FFmpeg
-type
-  CurveType* {.pure.} = enum
-    tri,   ## riangular, linear slope (default)  afade - triangular curve
-    qsin,  ## quarter of sine wave  afade - quarter sine wave curve
-    hsin,  ## half of sine wave  afade -  half sine wave curve
-    esin,  ## exponential sine wave  afade -  exponential sine wave curve
-    log,   ## logarithmic  afade -  logarithmic curve
-    ipar,  ## inverted parabola  afade -  inverted parabola curve
-    qua,   ## quadratic  afade - quadratic curve
-    cub,   ## cubic  afade - cubic curve
-    squ,   ## square root  afade - square root curve
-    cbr,   ## cubic root  afade - cubic root curve
-    par,   ## parabola  afade - parabola curve
-    exp,   ## exponential  afade -  exponential curve
-    iqsin, ## inverted quarter of sine wave  afade -  inverted quarter sine wave curve
-    ihsin, ## inverted half of sine wave  afade -  inverted half sine wave curve
-    dese,  ## double-exponential seat  afade - double-exponential seat curve
-    desi,  ## double-exponential sigmoid  afade - double-exponential sigmoid curve
-    losi,  ## logistic sigmoid  afade -  logistic sigmoid curve
-    nofade ## no fade
+## TODO: config generation at runtime using functions instead objects
 
-type
-  TransitionType* {.pure.} = enum
-    directionalLeft = "directional-left",
-    directionalRight = "directional-right",
-    directionalUp = "directional-up",
-    directionalDown = "directional-down",
-    random,
-    dummy
-  LayerType* {.pure.} = enum
-    video = "video",
-    audio = "audio",
-    detachedAudio = "detached-audio",
-    image = "image",
-    imageOverlay = "image-overlay",
-    title = "title",
-    subtitle = "subtitle",
-    titleBackground = "title-background",
-    newsTitle = "news-title",
-    slideInText = "slide-in-text",
-    fillColor = "fill-color",
-    pause = "pause",
-    radialGradient = "radial-gradient",
-    linearGradient = "linear-gradient",
-    rainbowColors = "rainbow-colors",
-    canvas = "canvas",
-    fabric = "fabric",
-    gl = "gl",
-    editlyBanner = "editly-banner"
-  ResizeMode* {.pure.} = enum 
-    contain = "contain",
-    containBlur = "contain-blur",
-    cover = "cover",
-    stretch = "stretch"
-  OriginX* {.pure.} = enum
-    left = "left",
-    center = "center",
-    right = "right"
-  OriginY* {.pure.} = enum
-    top = "top",
-    center = "center",
-    bottom = "bottom"
-  Position* = JsonNode
-  BackgroundLayerKind* {.pure.} = enum
-    radialGradient, linearGradient, fillColor
-  # Position* {.pure.} = enum
-  #   top = "top",
-  #   topLeft = "top-left",
-  #   topRight = "top-right",
-  #   center = "center",
-  #   centerLeft = "center-left",
-  #   centerRight = "center-right",
-  #   bottom = "bottom",
-  #   bottomLeft = "bottom-left",
-  #   bottomRight = "bottom-right",
-  #   PositionObject
-type
-  EditlyConfig* = ref object
-    outPath*: string
-    clips*: seq[EditlyClip]
-    width*, height*: int
-    fps*: int
-    customOutputArgs*: seq[string]
-    allowRemoteRequests*: bool
-    fast*: bool
-    defaults*: EditlyConfigDefaults
-  EditlyClip* = ref object
-    layers*: seq[EditlyConfigLayer]
-    duration*: int
-    transition*: EditlyConfigTransition
-  EditlyConfigLayer* = ref object
-    start*: int
-    stop*: int
-    case `type`: LayerType
+import std/[
+  json,
+  macros,
+  strutils # parseEnum
+]
+
+import editlyconf/types
+  
+func newEditlyConfig(
+  outPath: string;
+  clips: JsonNode;
+  width = 640;
+  height = 0;
+  fps = 25;
+  customOutputArgs = newSeq[string]();
+  allowRemoteRequests = false;
+  fast = false;
+  defaults = newJObject()
+): JsonNode = 
+  result = %*{
+    "outPath": outPath,
+    "clips": clips,
+    "width": width,
+    "height": height,
+    "fps": fps,
+    "customOutputArgs": customOutputArgs,
+    "allowRemoteRequests": allowRemoteRequests,
+    "fast": fast,
+    "defaults": defaults,
+  }
+
+func newEditlyClips(clips: varargs[tuple[
+  layers: JsonNode;
+  duration: int; ## optional
+  transition: JsonNode
+]]): JsonNode =
+  result = newJArray()
+  for clip in clips:
+    result.add %*{
+      "layers": clip.layers,
+      "duration": clip.duration,
+      "transition": clip.transition
+    }
+
+func newEditlyTransition(
+  duration = 0.5;
+  name = TransitionType.random;
+  audioOutCurve = CurveType.tri;
+  audioInCurve = CurveType.tri;
+  easing = "";
+  params: JsonNode
+): JsonNode =
+  result = %*{
+    "duration": duration,
+    "name": name,
+    "audioOutCurve": audioOutCurve,
+    "audioInCurve": audioInCurve,
+    "easing": easing,
+    "params": params
+  }
+
+
+func newEditlyTransitionParams(
+  params: varargs[(string, JsonNode)]
+): JsonNode =
+  result = newJObject()
+  for param in params:
+    result{param[0]} = param[1]
+
+func newEditlyLayer(
+  kind: LayerKind = LayerKind.none;
+  backgroundColor: string = "";
+  charSpacing: int = 0;
+  color: string = "";
+  colors: array[2, string] = ["", ""];
+  cutFrom: int = 0;
+  cutTo: int = 0;
+  duration: int = 0;
+  fontPath: string = "";
+  fontSize: int = 0;
+  height: float = 0;
+  left: float = 0;
+  mixVolume: string = "";
+  path: string = "";
+  start: int = 0;
+  text: string = "";
+  textColor: string = "";
+  top: float = 0;
+  width: float = 0;
+  zoomAmount: float = 0;
+  zoomDirection: string = "";
+  background: JsonNode = newJObject();
+  originX: OriginX = OriginX.left;
+  originY: OriginY = OriginY.top;
+  position: JsonNode = newJObject();
+  resizeMode: ResizeMode = ResizeMode.contain;
+  fragmentPath: string = "";
+  vertexPath: string = "";
+  speed: float = 0
+): JsonNode =
+  result = newJObject()
+  template setProp(name: untyped): untyped =
+    block:
+      var default: type `name`
+      when default is JsonNode:
+        debugEcho "name: " & asttostr name
+        if default == newJArray() or default == newJObject():
+          break
+        debugEcho default
+      else:
+        if default == `name`:
+          break
+      result[astToStr name] = %`name`
+  setProp kind
+  setProp backgroundColor
+  setProp charSpacing
+  setProp color
+  setProp colors
+  setProp cutFrom
+  setProp cutTo
+  setProp duration
+  setProp fontPath
+  setProp fontSize
+  setProp height
+  setProp left
+  setProp mixVolume
+  setProp path
+  setProp start
+  setProp text
+  setProp textColor
+  setProp top
+  setProp width
+  setProp zoomAmount
+  setProp zoomDirection
+  setProp background
+  setProp originY
+  setProp originX
+  setProp position
+  setProp resizeMode
+  setProp fragmentPath
+  setProp vertexPath
+  setProp speed
+  
+
+func newEditlyLayers(layers: varargs[JsonNode]): JsonNode =
+  result = newJArray()
+  for l in layers:
+    debugecho l
+    let kind = parseEnum[LayerKind](l["kind"].getStr)
+    var layer = %*{
+      "type": l{"kind"}
+    }
+    template setProp(name: untyped; required = false): untyped =
+      const n = astToStr name
+      let val = l{n}
+      if val == newJnull():
+        doAssert(false)
+        if required:
+          doAssert(false)
+            # doAssert(Layer().`name` != val)
+      else:
+        layer{n} = val
+    case kind:
     of video:
-      path*: string
-      resizeMode*: ResizeMode
-      cutFrom*, cutTo*: int
-      width*, height*: float
-      left*, top*: float
-      originX*: OriginX
-      originY*: OriginY
-      mixVolume*: string
-    of audio:
-      path*: string
-      cutFrom*, cutTo*: int
-      mixVolume*: string
-    of detachedAudio:
-      path*: string
-      cutFrom*, cutTo*: int
-      mixVolume*: string
-      start*: int
+      setProp(path, required = true)
+      setProp(resizeMode)
+      setProp(cutFrom)
+      setProp(cutFrom)
+      setProp(cutTo)
+      setProp(width)
+      setProp(height)
+      setProp(left)
+      setProp(top)
+      setProp(originX)
+      setProp(originY)
+      setProp(mixVolume)
+    of audio, detachedAudio:
+      setProp(path, required = true)
+      setProp(cutFrom)
+      setProp(cutFrom)
+      setProp(mixVolume)
     of image:
-      path*: string
-      resizeMode*: ResizeMode
-      duration*: int
-      zoomDirection*: string ## 'in' | 'out' | null
-      zoomAmount*: float
+      setProp(path, required = true)
+      setProp(resizeMode)
+      setProp(duration)
     of imageOverlay:
-      path*: string
-      position*: Position
-      resizeMode*: ResizeMode
-      width*, height*: float
-      zoomDirection*: string ## 'in' | 'out' | null
-      zoomAmount*: float
-    of imageOverlay:
-      path*: string
-      text*: string
-      textColor*: string
-      fontPath*: string
-      position*: Position
-      zoomDirection*: string ## 'in' | 'out' | null
-      zoomAmount*: float
+      setProp(path, required = true)
+      setProp(position)
+      setProp(width)
+      setProp(height)
+      setProp(zoomDirection)
+      setProp(zoomAmount)
+    of title:
+      setProp(text, required = true)
+      setProp(textColor)
+      setProp(fontPath)
+      setProp(position)
     of subtitle:
-      text*: string
-      textColor*: string
-      fontPath*: string
-      backgroundColor*: string
+      setProp(text, required = true)
+      setProp(textColor)
+      setProp(fontPath)
+      setProp(backgroundColor)
     of titleBackground:
-      text*: string
-      textColor*: string
-      fontPath*: string
-      background*: BackgroundLayer
+      setProp(text, required = true)
+      setProp(textColor)
+      setProp(fontPath)
+      setProp(background)
     of newsTitle:
-      text*: string
-      textColor*: string
-      fontPath*: string
-      backgroundColor*: string
-      position*: Position
+      setProp(text, required = true)
+      setProp(textColor)
+      setProp(fontPath)
+      setProp(backgroundColor)
+      setProp(position)
     of slideInText:
-      text*: string
-      textColor*: string
-      fontPath*: string
-      fontSize*: int
-      charSpacing*: int
-      color*: string
-      position*: Position
-    else: discard
-    
-  BackgroundLayer* = ref object
-    case `type`: BackgroundLayerKind
-    of BackgroundLayerKind.radialGradient,
-      BackgroundLayerKind.linearGradient:
-        colors*: array[2, string]
-    of BackgroundLayerKind.fillColor:
-      color*: string
+      setProp(text, required = true)
+      setProp(fontPath)
+      setProp(fontSize)
+      setProp(charSpacing)
+      setProp(color)
+      setProp(position)
+    of LayerKind.fillColor:
+      setProp(color)
+    of pause:
+      setProp(color)
+    of LayerKind.radialGradient:
+      setProp(colors)
+    of LayerKind.linearGradient:
+      setProp(colors)
+    of rainbowColors:
+      discard
+    of gl:
+      setProp(fragmentPath, required = true)
+      setProp(vertexPath)
+      setProp(speed)
+    of editlyBanner:
+      discard
+    of LayerKind.none:
+      doAssert false, "Provide the layer type"
+    result.add layer
+    debugecho layer
 
-  EditlyConfigTransition* = ref object
-    duration*: int
-    name*: TransitionType
-    audioOutCurve*: CurveType
-    audioInCurve*: CurveType
-    easing: string
-    params: EditlyConfigTransitionParams
-  EditlyConfigTransitionParams* = Table[string, JsonNode] ## JsonNode = number or boolean or object or seq[number]
-  EditlyConfigDefaults* = ref object
-    duration: float
-    layers*: EditlyConfigDefaultLayers
-    layerType*: EditlyConfigDefaultLayerType
-    transition*: EditlyConfigDefaultTransition
-  EditlyConfigDefaultLayers* = Table[string, string]
-  EditlyConfigDefaultLayerType* = Table[LayerType, Table[string, string]] ## https://github.com/mifi/editly#layer-types
-  EditlyConfigDefaultTransition* = EditlyConfigTransition
+func newEditlyPosition(
+  pos = Position.none;
+  x = 0.0;
+  y = 0.0;
+  originX = OriginX.center;
+  originY = OriginY.center
+): JsonNode =
+  if pos != none:
+    result = %pos
+  else:
+    result = %*{
+      "x": x,
+      "y": y,
+      "originX": originX,
+      "originY": originY
+    }
+
+func newEditlyDefaults(
+  duration = 4;
+  layer = newJObject();
+  layerType = newJObject();
+  transition = newJObject()
+): JsonNode =
+  result = %*{
+    "duration": duration,
+    "layerType": layerType,
+    "transition": transition
+  }
+  result["layer"] = %*layer
 
 
-  #   defaults*: EditlyConfigDefaults
-  # EditlyConfigDefaults* = ref object
-  #   duration: int
-  #   transition: EditlyConfigTransition
-  # EditlyConfigTransition* = ref object
-  #   duration: float
-  #   name: TransitionTypes
-  #   audioOutCurve: FadeCurve
-  #   audioInCurve: FadeCurve
-  #   layer: EditlyConfigTransitionLayer
-  #   layerType: EditlyConfigTransitionLayerType
-  # EditlyConfigTransitionLayer* = ref object
-  #   fontPath: string
-  #   # ...more layer defaults
-  # EditlyConfigTransitionLayerType* = ref object
-  #   'fill-color': {
-  #     color: '#ff6666',
-  #   }
-  #   # ...more per-layer-type defaults
+# func newEditly(): JsonNode =
+#   result = %*{
+#     "": 
+#   }
+
+when isMainModule:
+  echo newEditlyLayer(
+    kind = imageOverlay,
+    position = newEditlyPosition(top),
+    path = "dsadl;l;l;"
+  )
+  echo pretty newEditlyConfig(
+    outPath = "out.mp4",
+    clips = newEditlyClips(
+      (
+        layers: newEditlyLayers(
+          newEditlyLayer(
+            kind = imageOverlay,
+            position = newEditlyPosition(top),
+            path = "dsadl;l;l;"
+          )
+        ),
+        duration: 3,
+        transition: newEditlyTransition(
+          duration = 0.5,
+          name = random,
+          audioOutCurve = tri,
+          audioInCurve = tri,
+          easing = "",
+          params = newEditlyTransitionParams(
+            ("test", %1)
+          )
+        )
+      )
+    ),
+    defaults = newEditlyDefaults(
+      duration = 4,
+      layer = newEditlyLayer(
+        path = "das"
+      )
+    )
+  )
