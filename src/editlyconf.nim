@@ -1,5 +1,3 @@
-{.experimental: "dotOperators".}
-
 ## TODO: config generation at runtime using functions instead objects
 
 import std/[
@@ -10,7 +8,20 @@ import std/[
 
 import editlyconf/types
   
-func newEditlyConfig(
+template add2Res(name, default: untyped) =
+    block:
+      when `name` is JsonNode:
+        if `name` == newJArray() or `name` == newJObject():
+          break
+      else:
+        if default == `name`:
+          break
+      result[astToStr name] = %`name`
+template add2Res(name: untyped) =
+  var default: typeof `name`
+  add2Res(name, default)
+
+func newEditlyConfig*(
   outPath: string;
   clips: JsonNode;
   width = 640;
@@ -19,21 +30,23 @@ func newEditlyConfig(
   customOutputArgs = newSeq[string]();
   allowRemoteRequests = false;
   fast = false;
-  defaults = newJObject()
+  defaults = newJObject();
+  audioTracks = newJArray()
 ): JsonNode = 
   result = %*{
     "outPath": outPath,
     "clips": clips,
-    "width": width,
-    "height": height,
-    "fps": fps,
-    "customOutputArgs": customOutputArgs,
-    "allowRemoteRequests": allowRemoteRequests,
-    "fast": fast,
-    "defaults": defaults,
   }
+  add2Res width, 640
+  add2Res height
+  add2Res fps, 25
+  add2Res customOutputArgs
+  add2Res allowRemoteRequests
+  add2Res fast
+  add2Res defaults
+  add2Res audioTracks
 
-func newEditlyClips(clips: varargs[tuple[
+func newEditlyClips*(clips: varargs[tuple[
   layers: JsonNode;
   duration: int; ## optional
   transition: JsonNode
@@ -46,32 +59,31 @@ func newEditlyClips(clips: varargs[tuple[
       "transition": clip.transition
     }
 
-func newEditlyTransition(
+func newEditlyTransition*(
   duration = 0.5;
-  name = TransitionType.random;
-  audioOutCurve = CurveType.tri;
-  audioInCurve = CurveType.tri;
+  name = TransitionType.none;
+  audioOutCurve = CurveType.none;
+  audioInCurve = CurveType.none;
   easing = "";
-  params: JsonNode
+  params = newJObject()
 ): JsonNode =
-  result = %*{
-    "duration": duration,
-    "name": name,
-    "audioOutCurve": audioOutCurve,
-    "audioInCurve": audioInCurve,
-    "easing": easing,
-    "params": params
-  }
+  result = newJObject()
+  add2Res duration
+  add2Res name
+  add2Res audioOutCurve
+  add2Res audioInCurve
+  add2Res easing
+  add2Res params
 
 
-func newEditlyTransitionParams(
+func newEditlyTransitionParams*(
   params: varargs[(string, JsonNode)]
 ): JsonNode =
   result = newJObject()
   for param in params:
     result{param[0]} = param[1]
 
-func newEditlyLayer(
+func newEditlyLayer*(
   kind: LayerKind = LayerKind.none;
   backgroundColor: string = "";
   charSpacing: int = 0;
@@ -94,62 +106,49 @@ func newEditlyLayer(
   zoomAmount: float = 0;
   zoomDirection: string = "";
   background: JsonNode = newJObject();
-  originX: OriginX = OriginX.left;
-  originY: OriginY = OriginY.top;
+  originX: OriginX = OriginX.none;
+  originY: OriginY = OriginY.none;
   position: JsonNode = newJObject();
-  resizeMode: ResizeMode = ResizeMode.contain;
+  resizeMode: ResizeMode = ResizeMode.none;
   fragmentPath: string = "";
   vertexPath: string = "";
   speed: float = 0
 ): JsonNode =
   result = newJObject()
-  template setProp(name: untyped): untyped =
-    block:
-      var default: type `name`
-      when default is JsonNode:
-        debugEcho "name: " & asttostr name
-        if default == newJArray() or default == newJObject():
-          break
-        debugEcho default
-      else:
-        if default == `name`:
-          break
-      result[astToStr name] = %`name`
-  setProp kind
-  setProp backgroundColor
-  setProp charSpacing
-  setProp color
-  setProp colors
-  setProp cutFrom
-  setProp cutTo
-  setProp duration
-  setProp fontPath
-  setProp fontSize
-  setProp height
-  setProp left
-  setProp mixVolume
-  setProp path
-  setProp start
-  setProp text
-  setProp textColor
-  setProp top
-  setProp width
-  setProp zoomAmount
-  setProp zoomDirection
-  setProp background
-  setProp originY
-  setProp originX
-  setProp position
-  setProp resizeMode
-  setProp fragmentPath
-  setProp vertexPath
-  setProp speed
-  
+  add2Res kind
+  add2Res backgroundColor
+  add2Res charSpacing
+  add2Res color
+  add2Res colors
+  add2Res cutFrom
+  add2Res cutTo
+  add2Res duration
+  add2Res fontPath
+  add2Res fontSize
+  add2Res height
+  add2Res left
+  add2Res mixVolume
+  add2Res path
+  add2Res start
+  add2Res text
+  add2Res textColor
+  add2Res top
+  add2Res width
+  add2Res zoomAmount
+  add2Res zoomDirection
+  add2Res background
+  add2Res originY
+  add2Res originX
+  add2Res position
+  add2Res resizeMode
+  add2Res fragmentPath
+  add2Res vertexPath
+  add2Res speed
 
-func newEditlyLayers(layers: varargs[JsonNode]): JsonNode =
+
+func newEditlyLayers*(layers: varargs[JsonNode]): JsonNode =
   result = newJArray()
   for l in layers:
-    debugecho l
     let kind = parseEnum[LayerKind](l["kind"].getStr)
     var layer = %*{
       "type": l{"kind"}
@@ -157,11 +156,8 @@ func newEditlyLayers(layers: varargs[JsonNode]): JsonNode =
     template setProp(name: untyped; required = false): untyped =
       const n = astToStr name
       let val = l{n}
-      if val == newJnull():
-        doAssert(false)
-        if required:
-          doAssert(false)
-            # doAssert(Layer().`name` != val)
+      if val.isNil:
+          doAssert not required
       else:
         layer{n} = val
     case kind:
@@ -241,9 +237,8 @@ func newEditlyLayers(layers: varargs[JsonNode]): JsonNode =
     of LayerKind.none:
       doAssert false, "Provide the layer type"
     result.add layer
-    debugecho layer
 
-func newEditlyPosition(
+func newEditlyPosition*(
   pos = Position.none;
   x = 0.0;
   y = 0.0;
@@ -253,31 +248,43 @@ func newEditlyPosition(
   if pos != none:
     result = %pos
   else:
-    result = %*{
-      "x": x,
-      "y": y,
-      "originX": originX,
-      "originY": originY
-    }
+    result = newJObject()
+    add2Res x
+    add2Res y
+    add2Res originX
+    add2Res originY
 
-func newEditlyDefaults(
+func newEditlyDefaults*(
   duration = 4;
   layer = newJObject();
   layerType = newJObject();
   transition = newJObject()
 ): JsonNode =
+  result = newJObject()
+  add2Res duration
+  add2Res layerType
+  add2Res transition
+  add2Res layer
+
+func newEditlyAudioTracks*(tracks: varargs[JsonNode]): JsonNode =
+  result = newJArray()
+  for track in tracks:
+    result.add track
+
+func newEditlyAudioTrack*(
+  path: string;
+  mixVolume = "1";
+  cutFrom = 0;
+  cutTo = 0;
+  start = 0
+): JsonNode =
   result = %*{
-    "duration": duration,
-    "layerType": layerType,
-    "transition": transition
+    "path": path,
   }
-  result["layer"] = %*layer
-
-
-# func newEditly(): JsonNode =
-#   result = %*{
-#     "": 
-#   }
+  add2Res mixVolume, "1"
+  add2Res cutFrom
+  add2Res cutTo
+  add2Res start
 
 when isMainModule:
   echo newEditlyLayer(
@@ -313,6 +320,14 @@ when isMainModule:
       duration = 4,
       layer = newEditlyLayer(
         path = "das"
+      )
+    ),
+    audioTracks = newEditlyAudioTracks(
+      newEditlyAudioTrack(
+        "a.mp3"
+      ),
+      newEditlyAudioTrack(
+        "b.mp3",
       )
     )
   )

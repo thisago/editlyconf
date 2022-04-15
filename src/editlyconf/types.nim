@@ -2,6 +2,7 @@ from std/json import JsonNode
 
 type
   CurveType* {.pure.} = enum
+    none,
     tri,   ## riangular, linear slope (default)  afade - triangular curve
     qsin,  ## quarter of sine wave  afade - quarter sine wave curve
     hsin,  ## half of sine wave  afade -  half sine wave curve
@@ -21,6 +22,7 @@ type
     losi,  ## logistic sigmoid  afade -  logistic sigmoid curve
     nofade ## no fade
   TransitionType* {.pure.} = enum
+    none,
     directionalLeft = "directional-left",
     directionalRight = "directional-right",
     directionalUp = "directional-up",
@@ -49,10 +51,12 @@ type
     gl = "gl",
     editlyBanner = "editly-banner"
   OriginX* {.pure.} = enum
+    none,
     left = "left",
     center = "center",
     right = "right"
   OriginY* {.pure.} = enum
+    none,
     top = "top",
     center = "center",
     bottom = "bottom"
@@ -68,11 +72,13 @@ type
     bottomLeft = "bottom-left",
     bottomRight = "bottom-right"
   ResizeMode* {.pure.} = enum
+    none,
     contain = "contain",
     containBlur = "contain-blur",
     cover = "cover",
     stretch = "stretch"
   BackgroundLayerKind* {.pure.} = enum
+    none,
     radialGradient, linearGradient, fillColor
 
 type
@@ -113,3 +119,4 @@ type
         colors*: array[2, string]
     of BackgroundLayerKind.fillColor:
       color*: string
+    else: discard
