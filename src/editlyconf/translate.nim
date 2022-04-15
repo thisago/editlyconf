@@ -1,7 +1,7 @@
 ## This module converts JSON Editly configs into nim function calls
 
 from std/json import parseJson, `{}`, getStr, JsonNode, JsonNodeKind, items,
-                      getBool, getFloat, getInt, hasKey
+                      getBool, getFloat, getInt, hasKey, keys, `$`
 from std/strformat import fmt
 from std/strutils import repeat, multiReplace, join
 
@@ -86,6 +86,7 @@ proc fixCurveType(s: string): string =
 proc translateEditlyConf(conf: string): string =
   let node = parseJson conf
   result = "newEditlyConfig(".indent 0
+  
   result.addProp(node, "outPath", indentLevel = 1)
 
   block clips:
@@ -138,6 +139,16 @@ proc translateEditlyConf(conf: string): string =
           l.add "transition = newEditlyTransition(".indent 3
           l.addProp(tr, "duration", indentLevel = 4)
           l.addProp(tr, "audioInCurve", indentLevel = 4, process = fixCurveType)
+          l.addProp(tr, "audioOutCurve", indentLevel = 4, process = fixCurveType)
+          l.addProp(tr, "easing", indentLevel = 4)
+          block params:
+            if tr.hasKey "params":
+              l.add "params = newEditlyTransitionParams(".indent 4
+              let trParams = tr{"params"}
+              for key in trParams.keys:
+                l.add fmt"""("{key}", %{$trParams.getProp key}),""".indent 5
+              l.add clsParen.indent 4
+              
           l.add clsParen.indent 3
           clipProps.add l
           
@@ -153,16 +164,23 @@ proc translateEditlyConf(conf: string): string =
   result.addProp(node, "height", indentLevel = 1)
   result.addProp(node, "fps", indentLevel = 1)
 
-  if node.hasKey "customOutputArgs":
-    result.add "customOutputArgs = @[".indent 1
-    var list: seq[string]
-    for arg in node{"customOutputArgs"}:
-      list.add "\"" & arg.getStr & "\""
-    result.add list.join(",\l").indent 2
-    result.add clsBrkt.indent 1
+  block customOutputArgs:
+    if node.hasKey "customOutputArgs":
+      result.add "customOutputArgs = @[".indent 1
+      var list: seq[string]
+      for arg in node{"customOutputArgs"}:
+        list.add "\"" & arg.getStr & "\""
+      result.add list.join(",\l").indent 2
+      result.add clsBrkt.indent 1
 
   result.addProp(node, "allowRemoteRequests", indentLevel = 1)
   result.addProp(node, "fast", indentLevel = 1)
+
+  block defaults:
+    if node.hasKey "defaults":
+      
+
+
   result.add ")".indent 0
 
 when isMainModule:
@@ -184,7 +202,14 @@ when isMainModule:
       ],
       "transition": {
         "duration": 1,
-        "audioInCurve": "squ"
+        "audioInCurve": "squ",
+        "audioOutCurve": "squ",
+        "easing": "234",
+        "params": {
+          "v1": 1,
+          "v2": "test",
+          "v4": false
+        }
       }
     },
     {
@@ -260,4 +285,9 @@ when isMainModule:
       ]
     },
   ],
+  "customOutputArgs": [
+    "arg1",
+    "arg2",
+    "arg4",
+  ]
 }"""

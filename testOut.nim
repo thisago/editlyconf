@@ -14,6 +14,13 @@ echo pretty newEditlyConfig(
       transition = newEditlyTransition(
         duration = 1,
         audioInCurve = squ,
+        audioOutCurve = squ,
+        easing = "234",
+        params = newEditlyTransitionParams(
+          ("v1", %1),
+          ("v2", %"test"),
+          ("v4", %false),
+        ),
       ),
 
       duration = 3,
@@ -99,5 +106,10 @@ echo pretty newEditlyConfig(
       duration = 3,
     ),
   ),
+  customOutputArgs = @[
+    "arg1",
+    "arg2",
+    "arg4"
+  ],
 )
 
