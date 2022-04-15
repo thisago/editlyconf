@@ -1,0 +1,90 @@
+{
+  "outPath": "./out.mp4",
+  "clips": [
+    {
+      "layers": [
+        {
+          "type": "image",
+          "path": "image path"
+        }
+      ],
+      "duration": 3,
+      "transition": {
+        "duration": 1.0,
+        "audioInCurve": "squ"
+      }
+    },
+    {
+      "layers": [
+        {
+          "type": "image",
+          "path": "image path"
+        }
+      ],
+      "duration": 3
+    },
+    {
+      "layers": [
+        {
+          "type": "image",
+          "path": "image path"
+        }
+      ],
+      "duration": 3
+    },
+    {
+      "layers": [
+        {
+          "type": "image",
+          "path": "image path"
+        }
+      ],
+      "duration": 3
+    },
+    {
+      "layers": [
+        {
+          "type": "image",
+          "path": "image path"
+        }
+      ],
+      "duration": 3
+    },
+    {
+      "layers": [
+        {
+          "type": "image",
+          "path": "image path"
+        }
+      ],
+      "duration": 3
+    },
+    {
+      "layers": [
+        {
+          "type": "image",
+          "path": "image path"
+        }
+      ],
+      "duration": 3
+    },
+    {
+      "layers": [
+        {
+          "type": "image",
+          "path": "image path"
+        }
+      ],
+      "duration": 3
+    },
+    {
+      "layers": [
+        {
+          "type": "image",
+          "path": "image path"
+        }
+      ],
+      "duration": 3
+    }
+  ]
+}

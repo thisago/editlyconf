@@ -3,7 +3,7 @@
 version       = "0.1.0"
 author        = "Luciano Lorenzo"
 description   = "Editly config generation tools and types"
-license       = "MIT"
+license       = "gpl3-only"
 srcDir        = "src"
 
 
