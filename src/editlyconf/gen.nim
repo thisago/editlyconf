@@ -76,7 +76,7 @@ func newEditlyTransition*(
   params = newJObject()
 ): JsonNode =
   result = newJObject()
-  add2Res duration
+  add2Res duration, 0.5
   add2Res name
   add2Res audioOutCurve
   add2Res audioInCurve
@@ -269,7 +269,7 @@ func newEditlyDefaults*(
   transition = newJObject()
 ): JsonNode =
   result = newJObject()
-  add2Res duration
+  add2Res duration, 4
   add2Res layerType
   add2Res transition
   add2Res layer

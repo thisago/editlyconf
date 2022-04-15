@@ -14,7 +14,7 @@ const
 func indent*(s: string, count: Natural, padding: string = "  "): string =
   strutils.indent(s, count, padding) & "\l"
 
-proc getProp(node: JsonNode; name: string): string =
+func getProp(node: JsonNode; name: string): string =
   let n = node{name}
   if n.isNil: return
   result =
@@ -27,7 +27,7 @@ proc getProp(node: JsonNode; name: string): string =
     of JArray:  "[JSON Array]"
     of JNull:   ""
 
-proc addProp[T](
+func addProp[T](
   res: var T;
   node: JsonNode;
   prop: string;
@@ -46,7 +46,7 @@ proc addProp[T](
     r.add comma
     res.add r.indent indentLevel
 
-proc addTmp(
+func addTmp(
   res: var string;
   tmp: string
 ) =
@@ -65,7 +65,7 @@ proc addTmp(
   if test.len > 0:
     res.add tmp
 
-proc fixLayerKind(s: string): string =
+func fixLayerKind(s: string): string =
   result = s[1..^2]
   result = 
     case result:
@@ -80,8 +80,31 @@ proc fixLayerKind(s: string): string =
     of "rainbow-colors": "rainbowColors"
     else: result
 
-proc fixCurveType(s: string): string =
+func removeQuotes(s: string): string =
   result = s[1..^2]
+
+func addTransition(props: var string; node: JsonNode; indentLevel: int) =
+  block transition:
+    if node.hasKey "transition":
+      let tr = node{"transition"}
+      var l = ""
+      l.add "transition = newEditlyTransition(".indent indentLevel
+      let insideIndent = indentLevel + 1
+      l.addProp(tr, "duration", indentLevel = insideIndent)
+      l.addProp(tr, "name", indentLevel = insideIndent, process = removeQuotes)
+      l.addProp(tr, "audioInCurve", indentLevel = insideIndent, process = removeQuotes)
+      l.addProp(tr, "audioOutCurve", indentLevel = insideIndent, process = removeQuotes)
+      l.addProp(tr, "easing", indentLevel = insideIndent)
+      block params:
+        if tr.hasKey "params":
+          l.add "params = newEditlyTransitionParams(".indent insideIndent
+          let trParams = tr{"params"}
+          for key in trParams.keys:
+            l.add fmt"""("{key}", %{$trParams.getProp key}),""".indent 5
+          l.add clsParen.indent insideIndent
+          
+      l.add clsParen.indent indentLevel
+      props.add l
 
 proc translateEditlyConf(conf: string): string =
   let node = parseJson conf
@@ -94,7 +117,7 @@ proc translateEditlyConf(conf: string): string =
     var tmp = ""
     for clip in node{"clips"}:
       tmp.add "newEditlyClip(".indent 2
-      var clipProps: seq[string]
+      var clipProps: string
       block layers:
         var l = ""
         l.add "layers = newEditlyLayers(".indent 3
@@ -131,29 +154,12 @@ proc translateEditlyConf(conf: string): string =
           l.addProp(layer, "speed", indentLevel = 5)
           l.add clsParen.indent 4
         l.add clsParen.indent 3
+        
         clipProps.add l
-      block transition:
-        if clip.hasKey "transition":
-          let tr = clip{"transition"}
-          var l = ""
-          l.add "transition = newEditlyTransition(".indent 3
-          l.addProp(tr, "duration", indentLevel = 4)
-          l.addProp(tr, "audioInCurve", indentLevel = 4, process = fixCurveType)
-          l.addProp(tr, "audioOutCurve", indentLevel = 4, process = fixCurveType)
-          l.addProp(tr, "easing", indentLevel = 4)
-          block params:
-            if tr.hasKey "params":
-              l.add "params = newEditlyTransitionParams(".indent 4
-              let trParams = tr{"params"}
-              for key in trParams.keys:
-                l.add fmt"""("{key}", %{$trParams.getProp key}),""".indent 5
-              l.add clsParen.indent 4
-              
-          l.add clsParen.indent 3
-          clipProps.add l
+      clipProps.addTransition(clip, indentLevel = 3)
           
       clipProps.addProp(clip, "duration", indentLevel = 3)
-      tmp.add clipProps.join "\l"
+      tmp.add clipProps
       tmp.add clsParen.indent 2
       if clipProps.len > 0:
         result.addTmp tmp
@@ -178,116 +184,32 @@ proc translateEditlyConf(conf: string): string =
 
   block defaults:
     if node.hasKey "defaults":
+      let def = node{"defaults"}
+      result.add "defaults = newEditlyDefaults(".indent 1
+      result.addProp(def, "duration", indentLevel = 2)
+      block layer:
+        if def.hasKey "layer":
+          result.add "layer = newEditlyLayer(".indent 2
+          let lay = def{"layer"}
+          for key in lay.keys:
+            result.addProp(lay, key, indentLevel = 3)
+          result.add clsParen.indent 2
+      block layerType: ## TODO: A generation func to this object
+        if def.hasKey "layerType":
+          result.add "layerType = %*{".indent 2
+          let layTy = def{"layerType"}
+          for key in layTy.keys:
+            let val = layTy.getProp key
+            result.add fmt""""{key}": {val},""".indent 3
+          result.add clsCurly.indent 2
+        result.addTransition def, 2
+
+      result.add clsParen.indent 1
       
 
 
   result.add ")".indent 0
 
 when isMainModule:
-  echo translateEditlyConf """{
-  "outPath": "./out.mp4",
-  "defaults": {
-    "transition": {
-      "name": "random"
-    },
-  },
-  "clips": [
-    {
-      "duration": 3,
-      "layers": [
-        {
-          "type": "image",
-          "path": "image path"
-        }
-      ],
-      "transition": {
-        "duration": 1,
-        "audioInCurve": "squ",
-        "audioOutCurve": "squ",
-        "easing": "234",
-        "params": {
-          "v1": 1,
-          "v2": "test",
-          "v4": false
-        }
-      }
-    },
-    {
-      "duration": 3,
-      "layers": [
-        {
-          "type": "image",
-          "path": "image path"
-        }
-      ]
-    },
-    {
-      "duration": 3,
-      "layers": [
-        {
-          "type": "image",
-          "path": "image path"
-        }
-      ]
-    },
-    {
-      "duration": 3,
-      "layers": [
-        {
-          "type": "image",
-          "path": "image path"
-        }
-      ]
-    },
-    {
-      "duration": 3,
-      "layers": [
-        {
-          "type": "image",
-          "path": "image path"
-        }
-      ]
-    },
-    {
-      "duration": 3,
-      "layers": [
-        {
-          "type": "image",
-          "path": "image path"
-        }
-      ]
-    },
-    {
-      "duration": 3,
-      "layers": [
-        {
-          "type": "image",
-          "path": "image path"
-        }
-      ]
-    },
-    {
-      "duration": 3,
-      "layers": [
-        {
-          "type": "image",
-          "path": "image path"
-        }
-      ]
-    },
-    {
-      "duration": 3,
-      "layers": [
-        {
-          "type": "image",
-          "path": "image path"
-        }
-      ]
-    },
-  ],
-  "customOutputArgs": [
-    "arg1",
-    "arg2",
-    "arg4",
-  ]
-}"""
+  let path = "tests/translate/"
+  writeFile path & "out.nim", translateEditlyConf readFile path & "in.json"
