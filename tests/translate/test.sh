@@ -1,7 +1,7 @@
 #!/bin/bash
 nim r ./src/editlyconf/translate.nim
 
-x=`echo -ne "import std/json, editlyconf\nwriteFile \"out.json\", pretty "; cat tests/translate/out.nim`
+x=`echo -ne "import std/json, editlyconf\nwriteFile \"tests/translate/out.json\", pretty "; cat tests/translate/out.nim`
 echo "$x" > tests/translate/out.nim
 
 nim r tests/translate/out.nim

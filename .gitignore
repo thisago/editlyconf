@@ -1,1 +1,3 @@
 .ignore
+tests/translate/*.json
+tests/translate/*.nim
