@@ -12,7 +12,7 @@ from std/strutils import parseEnum
 from std/sequtils import toSeq
 import ./types
   
-template add2Res(name, default: untyped) =
+template add2Res(name, default: untyped; key = "") =
     block:
       when `name` is JsonNode:
         # if `name` == newJArray() or `name` == newJObject():
@@ -21,10 +21,11 @@ template add2Res(name, default: untyped) =
       else:
         if default == `name`:
           break
-      result[astToStr name] = %`name`
-template add2Res(name: untyped) =
+      let keyName = if key.len > 0: key else: astToStr name
+      result[keyName] = %`name`
+template add2Res(name: untyped; key = "") =
   var default {.used.}: typeof `name`
-  add2Res(name, default)
+  add2Res(name, default, key)
 
 func newEditlyConfig*(
   outPath: string;
@@ -123,7 +124,7 @@ func newEditlyLayer*(
   speed: float = 0
 ): JsonNode =
   result = newJObject()
-  add2Res kind
+  add2Res kind, key = "type"
   add2Res backgroundColor
   add2Res charSpacing
   add2Res color
