@@ -23,12 +23,12 @@ template add2Res(name, default: untyped) =
           break
       result[astToStr name] = %`name`
 template add2Res(name: untyped) =
-  var default: typeof `name`
+  var default {.used.}: typeof `name`
   add2Res(name, default)
 
 func newEditlyConfig*(
   outPath: string;
-  clips: JsonNode;
+  clips = newJArray();
   width = 640;
   height = 0;
   fps = 25;
@@ -40,8 +40,8 @@ func newEditlyConfig*(
 ): JsonNode = 
   result = %*{
     "outPath": outPath,
-    "clips": clips,
   }
+  add2Res clips
   add2Res width, 640
   add2Res height
   add2Res fps, 25
