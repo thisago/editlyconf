@@ -40,8 +40,8 @@ func newEditlyConfig*(
 ): JsonNode = 
   result = %*{
     "outPath": outPath,
+    "clips": clips
   }
-  add2Res clips
   add2Res width, 640
   add2Res height
   add2Res fps, 25

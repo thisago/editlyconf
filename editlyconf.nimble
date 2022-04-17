@@ -1,6 +1,6 @@
 # Package
 
-version       = "1.1.0"
+version       = "1.1.1"
 author        = "Luciano Lorenzo"
 description   = "Editly config generation tools and types"
 license       = "gpl3-only"
