@@ -83,7 +83,7 @@ func newEditlyClips*(clips: varargs[JsonNode]): JsonNode =
 
 func newEditlyClip*(
   layers: JsonNode;
-  duration = 4;
+  duration = 4.0;
   transition = newJObject()
 ): JsonNode =
   result = %*{
@@ -288,7 +288,7 @@ func newEditlyPosition*(
     add2Res originY
 
 func newEditlyDefaults*(
-  duration = 4;
+  duration = 4.0;
   layer = newJObject();
   layerType = newJObject();
   transition = newJObject()
@@ -307,9 +307,9 @@ func newEditlyAudioTracks*(tracks: varargs[JsonNode]): JsonNode =
 func newEditlyAudioTrack*(
   path: string;
   mixVolume = "1";
-  cutFrom = 0;
-  cutTo = 0;
-  start = 0
+  cutFrom = 0.0;
+  cutTo = 0.0;
+  start = 0.0
 ): JsonNode =
   result = %*{
     "path": path,
