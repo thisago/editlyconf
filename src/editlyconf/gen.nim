@@ -55,9 +55,9 @@ func newEditlyConfig*(
     "outPath": outPath,
     "clips": clips
   }
-  add2Res width, 640
+  add2Res width, default = 640
   add2Res height
-  add2Res fps, 25
+  add2Res fps, default = 25
   add2Res customOutputArgs
   add2Res allowRemoteRequests
   add2Res fast
@@ -101,7 +101,7 @@ func newEditlyTransition*(
   params = newJObject()
 ): JsonNode =
   result = newJObject()
-  add2Res duration, 0.5
+  add2Res duration, default = 0.5
   add2Res name
   add2Res audioOutCurve
   add2Res audioInCurve
@@ -294,7 +294,7 @@ func newEditlyDefaults*(
   transition = newJObject()
 ): JsonNode =
   result = newJObject()
-  add2Res duration, 4
+  add2Res duration, default = 4
   add2Res layerType
   add2Res transition
   add2Res layer
@@ -314,7 +314,7 @@ func newEditlyAudioTrack*(
   result = %*{
     "path": path,
   }
-  add2Res mixVolume, "1"
+  add2Res mixVolume, default = "1"
   add2Res cutFrom
   add2Res cutTo
   add2Res start
