@@ -37,7 +37,19 @@ func newEditlyConfig*(
   allowRemoteRequests = false;
   fast = false;
   defaults = newJObject();
-  audioTracks = newJArray()
+  audioTracks = newJArray();
+  audioFilePath = "";
+  loopAudio = false;
+  keepSourceAudio = false;
+  clipsAudioVolume = 0.0;
+  outputVolume = 0.0;
+  audioNorm = newJObject();
+  ffmpegPath = "";
+  ffprobePath = "";
+  enableFfmpegLog = false;
+  verbose = false;
+  logTimes = false;
+  keepTmp = false;
 ): JsonNode = 
   result = %*{
     "outPath": outPath,
@@ -51,6 +63,18 @@ func newEditlyConfig*(
   add2Res fast
   add2Res defaults
   add2Res audioTracks
+  add2Res audioFilePath
+  add2Res loopAudio
+  add2Res keepSourceAudio
+  add2Res clipsAudioVolume
+  add2Res outputVolume
+  add2Res audioNorm
+  add2Res ffmpegPath
+  add2Res ffprobePath
+  add2Res enableFfmpegLog
+  add2Res verbose
+  add2Res logTimes
+  add2Res keepTmp
 
 func newEditlyClips*(clips: varargs[JsonNode]): JsonNode =
   result = newJArray()
@@ -93,35 +117,35 @@ func newEditlyTransitionParams*(
     result[param[0]] = param[1]
 
 func newEditlyLayer*(
-  kind: LayerKind = LayerKind.none;
-  backgroundColor: string = "";
-  charSpacing: int = 0;
-  color: string = "";
-  colors: array[2, string] = ["", ""];
-  cutFrom: float = 0;
-  cutTo: float = 0;
-  duration: int = 0;
-  fontPath: string = "";
-  fontSize: int = 0;
-  height: float = 0;
-  left: float = 0;
-  mixVolume: float = 0.0;
-  path: string = "";
-  start: int = 0;
-  text: string = "";
-  textColor: string = "";
-  top: float = 0;
-  width: float = 0;
-  zoomAmount: float = 0;
-  zoomDirection: string = "";
-  background: JsonNode = newJObject();
-  originX: OriginX = OriginX.none;
-  originY: OriginY = OriginY.none;
-  position: JsonNode = newJObject();
-  resizeMode: ResizeMode = ResizeMode.none;
-  fragmentPath: string = "";
-  vertexPath: string = "";
-  speed: float = 0
+  kind = LayerKind.none;
+  backgroundColor = "";
+  charSpacing = 0;
+  color = "";
+  colors = ["", ""];
+  cutFrom = 0.0;
+  cutTo = 0.0;
+  duration = 0;
+  fontPath = "";
+  fontSize = 0;
+  height = 0.0;
+  left = 0.0;
+  mixVolume = 0.0;
+  path = "";
+  start = 0;
+  text = "";
+  textColor = "";
+  top = 0.0;
+  width = 0.0;
+  zoomAmount = 0.0;
+  zoomDirection = "";
+  background = newJObject();
+  originX = OriginX.none;
+  originY = OriginY.none;
+  position = newJObject();
+  resizeMode = ResizeMode.none;
+  fragmentPath = "";
+  vertexPath = "";
+  speed = 0.0;
 ): JsonNode =
   result = newJObject()
   add2Res kind, key = "type"
