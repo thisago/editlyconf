@@ -98,8 +98,8 @@ func newEditlyLayer*(
   charSpacing: int = 0;
   color: string = "";
   colors: array[2, string] = ["", ""];
-  cutFrom: int = 0;
-  cutTo: int = 0;
+  cutFrom: float = 0;
+  cutTo: float = 0;
   duration: int = 0;
   fontPath: string = "";
   fontSize: int = 0;
