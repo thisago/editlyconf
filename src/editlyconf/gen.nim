@@ -158,9 +158,9 @@ func newEditlyLayer*(
 func newEditlyLayers*(layers: varargs[JsonNode]): JsonNode =
   result = newJArray()
   for l in layers:
-    let kind = parseEnum[LayerKind](l["kind"].getStr)
+    let kind = parseEnum[LayerKind](l["type"].getStr)
     var layer = %*{
-      "type": l{"kind"}
+      "type": l{"type"}
     }
     template setProp(name: untyped; required = false): untyped =
       const n = astToStr name
