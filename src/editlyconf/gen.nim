@@ -124,14 +124,14 @@ func newEditlyLayer*(
   colors = ["", ""];
   cutFrom = 0.0;
   cutTo = 0.0;
-  duration = 0;
+  duration = 0.0;
   fontPath = "";
   fontSize = 0;
   height = 0.0;
   left = 0.0;
   mixVolume = 0.0;
   path = "";
-  start = 0;
+  start = 0.0;
   text = "";
   textColor = "";
   top = 0.0;
