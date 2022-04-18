@@ -105,7 +105,7 @@ func newEditlyLayer*(
   fontSize: int = 0;
   height: float = 0;
   left: float = 0;
-  mixVolume: string = "";
+  mixVolume: float = 0.0;
   path: string = "";
   start: int = 0;
   text: string = "";
