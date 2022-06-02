@@ -1,7 +1,7 @@
 # Package
 
 version       = "1.1.3"
-author        = "Luciano Lorenzo"
+author        = "Thiago Navarro"
 description   = "Editly config generation tools and types"
 license       = "gpl3-only"
 srcDir        = "src"
