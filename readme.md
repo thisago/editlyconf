@@ -7,4 +7,4 @@
 
 ## License
 
-GPL-3
+MIT
