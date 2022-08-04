@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 1.1.4 (2022/05/12)
+
+- changed the default value for `mixVolume`
+
+---
+
 ## Version 1.1.3 (2022/04/18)
 
 - Removed redundant type definition

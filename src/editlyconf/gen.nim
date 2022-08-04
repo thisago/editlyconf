@@ -129,7 +129,7 @@ func newEditlyLayer*(
   fontSize = 0;
   height = 0.0;
   left = 0.0;
-  mixVolume = 0.0;
+  mixVolume = 1.0;
   path = "";
   start = 0.0;
   text = "";
@@ -160,7 +160,7 @@ func newEditlyLayer*(
   add2Res fontSize
   add2Res height
   add2Res left
-  add2Res mixVolume
+  add2Res mixVolume, default = 1.0
   add2Res path
   add2Res start
   add2Res text
@@ -195,76 +195,76 @@ func newEditlyLayers*(layers: varargs[JsonNode]): JsonNode =
         layer[n] = val
     case kind:
     of video:
-      setProp(path, required = true)
-      setProp(resizeMode)
-      setProp(cutFrom)
-      setProp(cutFrom)
-      setProp(cutTo)
-      setProp(width)
-      setProp(height)
-      setProp(left)
-      setProp(top)
-      setProp(originX)
-      setProp(originY)
-      setProp(mixVolume)
+      setProp path, required = true
+      setProp resizeMode
+      setProp cutFrom
+      setProp cutFrom
+      setProp cutTo
+      setProp width
+      setProp height
+      setProp left
+      setProp top
+      setProp originX
+      setProp originY
+      setProp mixVolume
     of audio, detachedAudio:
-      setProp(path, required = true)
-      setProp(cutFrom)
-      setProp(cutFrom)
-      setProp(mixVolume)
+      setProp path, required = true
+      setProp cutFrom
+      setProp cutFrom
+      setProp mixVolume
     of image:
-      setProp(path, required = true)
-      setProp(resizeMode)
-      setProp(duration)
+      setProp path, required = true
+      setProp resizeMode
+      setProp duration
     of imageOverlay:
-      setProp(path, required = true)
-      setProp(position)
-      setProp(width)
-      setProp(height)
-      setProp(zoomDirection)
-      setProp(zoomAmount)
+      setProp path, required = true
+      setProp position
+      setProp width
+      setProp height
+      setProp zoomDirection
+      setProp zoomAmount
     of title:
-      setProp(text, required = true)
-      setProp(textColor)
-      setProp(fontPath)
-      setProp(position)
+      setProp text, required = true
+      setProp textColor
+      setProp fontPath
+      setProp position
     of subtitle:
-      setProp(text, required = true)
-      setProp(textColor)
-      setProp(fontPath)
-      setProp(backgroundColor)
+      setProp text, required = true
+      setProp textColor
+      setProp fontPath
+      setProp backgroundColor
     of titleBackground:
-      setProp(text, required = true)
-      setProp(textColor)
-      setProp(fontPath)
-      setProp(background)
+      setProp text, required = true
+      setProp textColor
+      setProp fontPath
+      setProp background
     of newsTitle:
-      setProp(text, required = true)
-      setProp(textColor)
-      setProp(fontPath)
-      setProp(backgroundColor)
-      setProp(position)
+      setProp text, required = true
+      setProp textColor
+      setProp fontPath
+      setProp backgroundColor
+      setProp position
     of slideInText:
-      setProp(text, required = true)
-      setProp(fontPath)
-      setProp(fontSize)
-      setProp(charSpacing)
-      setProp(color)
-      setProp(position)
+      setProp text, required = true
+      setProp fontPath
+      setProp fontSize
+      setProp charSpacing
+      setProp color
+      setProp position
     of LayerKind.fillColor:
-      setProp(color)
+      setProp color
     of pause:
-      setProp(color)
+      setProp color
     of LayerKind.radialGradient:
-      setProp(colors)
+      setProp colors
     of LayerKind.linearGradient:
-      setProp(colors)
+      setProp colors
     of rainbowColors:
       discard
     of gl:
-      setProp(fragmentPath, required = true)
-      setProp(vertexPath)
-      setProp(speed)
+      setProp fragmentPath, required = true
+      setProp vertexPath
+      setProp speed
     of editlyBanner:
       discard
     of LayerKind.none:
